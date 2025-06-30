@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Paper,
@@ -48,7 +48,7 @@ interface PlanData {
     achievementIndicators: string;
   };
   services: {
-    serviceType: string;
+    serviceType: string[];
     frequency: string;
     duration: string;
     provider: string;
@@ -108,7 +108,7 @@ const PlanEditor: React.FC = () => {
       achievementIndicators: '日常生活動作の自立度向上',
     },
     services: {
-      serviceType: '居宅介護',
+      serviceType: ['居宅介護'],
       frequency: '週3回',
       duration: '2時間/回',
       provider: '○○介護サービス',
@@ -130,9 +130,25 @@ const PlanEditor: React.FC = () => {
     lifeHistory: '',
   });
 
+  // 初期表示時にlocalStorageから復元
+  useEffect(() => {
+    if (planId && planId !== 'new') {
+      const saved = localStorage.getItem(`planData_${planId}`);
+      if (saved) {
+        setPlanData(JSON.parse(saved));
+      }
+    }
+    // 新規作成時は新しいIDを発行してURL遷移
+    if (planId === 'new') {
+      const newId = Date.now().toString();
+      navigate(`/editor/${newId}`, { replace: true });
+    }
+  }, [planId, navigate]);
+
   const handleSave = () => {
-    // 保存処理
-    console.log('Saving plan:', planData);
+    if (!planId) return;
+    localStorage.setItem(`planData_${planId}`, JSON.stringify(planData));
+    alert('保存しました');
   };
 
   const handlePrint = () => {
@@ -156,6 +172,31 @@ const PlanEditor: React.FC = () => {
         },
       }));
     }
+  };
+
+  // 利用サービス種別の選択肢
+  const serviceOptions = [
+    '居宅介護',
+    '重度訪問介護',
+    '同行援護',
+    '行動援護',
+    '療養介護',
+    '生活介護',
+    '就労継続支援',
+    '就労移行支援',
+  ];
+
+  // チェックボックスの変更ハンドラ
+  const handleServiceTypeChange = (service: string) => {
+    setPlanData((prev) => ({
+      ...prev,
+      services: {
+        ...prev.services,
+        serviceType: prev.services.serviceType.includes(service)
+          ? prev.services.serviceType.filter((s) => s !== service)
+          : [...prev.services.serviceType, service],
+      },
+    }));
   };
 
   return (
@@ -236,7 +277,24 @@ const PlanEditor: React.FC = () => {
         <Box sx={{ border: '1px solid #bbb', p: 2, mb: 2 }}>
           <Typography variant="subtitle1" sx={{ mb: 1 }}>利用サービス・サービス内容</Typography>
           <Grid container spacing={2}>
-            <Grid item xs={6}><FormControl fullWidth><InputLabel>利用サービス種別</InputLabel><Select value={planData.services.serviceType} onChange={e => updatePlanData('services', 'serviceType', e.target.value)} label="利用サービス種別"><MenuItem value="居宅介護">居宅介護</MenuItem><MenuItem value="重度訪問介護">重度訪問介護</MenuItem><MenuItem value="同行援護">同行援護</MenuItem><MenuItem value="行動援護">行動援護</MenuItem><MenuItem value="療養介護">療養介護</MenuItem><MenuItem value="生活介護">生活介護</MenuItem><MenuItem value="就労継続支援">就労継続支援</MenuItem><MenuItem value="就労移行支援">就労移行支援</MenuItem></Select></FormControl></Grid>
+            <Grid item xs={6}>
+              <FormControl component="fieldset" fullWidth>
+                <Typography sx={{ mb: 1 }}>利用サービス種別（複数選択可）</Typography>
+                <Box>
+                  {serviceOptions.map((service) => (
+                    <label key={service} style={{ display: 'block', marginBottom: 4 }}>
+                      <input
+                        type="checkbox"
+                        value={service}
+                        checked={planData.services.serviceType.includes(service)}
+                        onChange={() => handleServiceTypeChange(service)}
+                      />
+                      {service}
+                    </label>
+                  ))}
+                </Box>
+              </FormControl>
+            </Grid>
             <Grid item xs={6}><TextField fullWidth label="頻度" value={planData.services.frequency} onChange={e => updatePlanData('services', 'frequency', e.target.value)} /></Grid>
             <Grid item xs={6}><TextField fullWidth label="時間・期間" value={planData.services.duration} onChange={e => updatePlanData('services', 'duration', e.target.value)} /></Grid>
             <Grid item xs={6}><TextField fullWidth label="提供事業者" value={planData.services.provider} onChange={e => updatePlanData('services', 'provider', e.target.value)} /></Grid>

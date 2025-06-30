@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Typography,
@@ -41,7 +41,7 @@ interface PlanData {
     achievementIndicators: string;
   };
   services: {
-    serviceType: string;
+    serviceType: string[];
     frequency: string;
     duration: string;
     provider: string;
@@ -80,12 +80,7 @@ interface PlanData {
   };
 }
 
-const PlanView: React.FC = () => {
-  const { planId } = useParams<{ planId: string }>();
-  const navigate = useNavigate();
-
-  // ダミーデータ
-  const planData: PlanData = {
+const defaultPlanData: PlanData = {
     id: '1',
     clientName: '田中太郎',
     clientId: 'C001',
@@ -109,7 +104,7 @@ const PlanView: React.FC = () => {
       achievementIndicators: '日常生活動作の自立度向上',
     },
     services: {
-      serviceType: '居宅介護',
+    serviceType: ['居宅介護'],
       frequency: '週3回',
       duration: '2時間/回',
       provider: '○○介護サービス',
@@ -147,6 +142,25 @@ const PlanView: React.FC = () => {
       medicalInfo: 'かかりつけ医：渋谷クリニック、通院：月1回、服薬：有',
     },
   };
+
+const PlanView: React.FC = () => {
+  const { planId } = useParams<{ planId: string }>();
+  const navigate = useNavigate();
+
+  const [planData, setPlanData] = useState<PlanData | null>(null);
+
+  useEffect(() => {
+    if (planId) {
+      const saved = localStorage.getItem(`planData_${planId}`);
+      if (saved) {
+        setPlanData(JSON.parse(saved));
+        return;
+      }
+    }
+    setPlanData(defaultPlanData);
+  }, [planId]);
+
+  if (!planData) return null;
 
   const handleEdit = () => {
     navigate(`/editor/${planId}`);
@@ -240,7 +254,13 @@ const PlanView: React.FC = () => {
         {/* 利用サービス・サービス内容 */}
         <Box sx={{ border: '1px solid #bbb', p: 2, mb: 2 }}>
           <Typography variant="subtitle1" sx={{ mb: 1 }}>利用サービス・サービス内容</Typography>
-          <Typography sx={{ whiteSpace: 'pre-line' }}>利用サービス種別: {planData.services.serviceType}</Typography>
+          <Typography sx={{ whiteSpace: 'pre-line' }}>
+            利用サービス種別: {
+              Array.isArray(planData.services.serviceType)
+                ? planData.services.serviceType.join('、')
+                : planData.services.serviceType
+            }
+          </Typography>
           <Typography sx={{ whiteSpace: 'pre-line' }}>頻度: {planData.services.frequency}</Typography>
           <Typography sx={{ whiteSpace: 'pre-line' }}>時間・期間: {planData.services.duration}</Typography>
           <Typography sx={{ whiteSpace: 'pre-line' }}>提供事業者: {planData.services.provider}</Typography>
