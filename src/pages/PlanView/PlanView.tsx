@@ -79,6 +79,9 @@ interface PlanData {
     education: string;
     medicalInfo: string;
   };
+  creator?: string;
+  supportCoordinatorName?: string;
+  contact?: string;
 }
 
 const defaultPlanData: PlanData = {
@@ -142,6 +145,9 @@ const defaultPlanData: PlanData = {
       education: '高卒',
       medicalInfo: 'かかりつけ医：渋谷クリニック、通院：月1回、服薬：有',
     },
+    creator: '山田相談員',
+    supportCoordinatorName: '山田相談員',
+    contact: '03-1234-5678',
   };
 
 const PlanView: React.FC = () => {
@@ -203,15 +209,22 @@ const PlanView: React.FC = () => {
         <Box sx={{ border: '1px solid #bbb', p: 2, mb: 2 }}>
           <Grid container spacing={2}>
             <Grid item xs={6}><Typography>作成日: {planData.createdAt}</Typography></Grid>
-            <Grid item xs={6}><Typography>相談支援事業者名: {planData.supportSystem?.supportCoordinator}</Typography></Grid>
-            <Grid item xs={6}><Typography>作成者: {planData.assignedTo}</Typography></Grid>
-            <Grid item xs={6}><Typography>連絡先: {planData.phone}</Typography></Grid>
+            <Grid item xs={6}><Typography>相談支援事業者名: {planData.supportCoordinatorName}</Typography></Grid>
+            <Grid item xs={6}><Typography>作成者: {planData.creator}</Typography></Grid>
+            <Grid item xs={6}><Typography>連絡先: {planData.contact}</Typography></Grid>
           </Grid>
         </Box>
         {/* 概要（支援経過・課題のみ） */}
         <Box sx={{ border: '1px solid #bbb', p: 2, mb: 2 }}>
           <Typography variant="subtitle1" sx={{ mb: 1 }}>1. 概要（支援経過・課題のみ）</Typography>
           <Typography sx={{ whiteSpace: 'pre-line' }}>{planData.summary}</Typography>
+        </Box>
+        {/* 基本情報 */}
+        <Box sx={{ border: '1px solid #bbb', p: 2, mb: 2 }}>
+          <Typography variant="subtitle1" sx={{ mb: 1 }}>基本情報</Typography>
+          <Typography>作成者: {planData.creator || ''}</Typography>
+          <Typography>相談支援事業者名: {planData.supportCoordinatorName || ''}</Typography>
+          <Typography>連絡先: {planData.contact || ''}</Typography>
         </Box>
         {/* 基本情報 */}
         <Box sx={{ border: '1px solid #bbb', p: 2, mb: 2 }}>

@@ -23,6 +23,10 @@ import {
 import { useParams, useNavigate } from 'react-router-dom';
 
 interface PlanData {
+  createdAt?: string;
+  creator?: string;
+  supportCoordinatorName?: string;
+  contact?: string;
   basicInfo: {
     name: string;
     birthDate: string;
@@ -83,6 +87,10 @@ const PlanEditor: React.FC = () => {
   const { planId } = useParams<{ planId: string }>();
   const navigate = useNavigate();
   const [planData, setPlanData] = useState<PlanData>({
+    createdAt: '',
+    creator: '',
+    supportCoordinatorName: '',
+    contact: '',
     basicInfo: {
       name: '田中太郎',
       birthDate: '1985-03-15',
@@ -140,6 +148,11 @@ const PlanEditor: React.FC = () => {
         if (!parsed.services.frequencyMap) {
           parsed.services.frequencyMap = {};
         }
+        // 新フィールドがなければ空文字で補完
+        if (!('createdAt' in parsed)) parsed.createdAt = '';
+        if (!('creator' in parsed)) parsed.creator = '';
+        if (!('supportCoordinatorName' in parsed)) parsed.supportCoordinatorName = '';
+        if (!('contact' in parsed)) parsed.contact = '';
         setPlanData(parsed);
       }
     }
@@ -165,14 +178,20 @@ const PlanEditor: React.FC = () => {
     console.log('Downloading plan as PDF');
   };
 
-  const updatePlanData = (section: keyof PlanData | 'summary' | 'lifeHistory', field: string, value: string) => {
+  const updatePlanData = (
+    section: keyof Pick<PlanData, 'basicInfo' | 'currentSituation' | 'goals' | 'services' | 'supportSystem' | 'monitoring'> | 'summary' | 'lifeHistory' | '',
+    field: string,
+    value: string
+  ) => {
     if (section === 'summary' || section === 'lifeHistory') {
       setPlanData((prev) => ({ ...prev, [section]: value }));
+    } else if (section === '') {
+      setPlanData((prev) => ({ ...prev, [field]: value }));
     } else {
       setPlanData((prev) => ({
         ...prev,
         [section]: {
-          ...prev[section],
+          ...((prev[section] as object) || {}),
           [field]: value,
         },
       }));
@@ -241,10 +260,10 @@ const PlanEditor: React.FC = () => {
         {/* 作成日・相談支援事業者名・作成者・連絡先 */}
         <Box sx={{ border: '1px solid #bbb', p: 2, mb: 2 }}>
           <Grid container spacing={2}>
-            <Grid item xs={6}><TextField fullWidth label="作成日" type="date" InputLabelProps={{ shrink: true }} /></Grid>
-            <Grid item xs={6}><TextField fullWidth label="相談支援事業者名" /></Grid>
-            <Grid item xs={6}><TextField fullWidth label="作成者" /></Grid>
-            <Grid item xs={6}><TextField fullWidth label="連絡先" /></Grid>
+            <Grid item xs={6}><TextField fullWidth label="作成日" type="date" InputLabelProps={{ shrink: true }} value={planData.createdAt || ''} onChange={e => updatePlanData('', 'createdAt', e.target.value)} /></Grid>
+            <Grid item xs={6}><TextField fullWidth label="相談支援事業者名" value={planData.supportCoordinatorName || ''} onChange={e => updatePlanData('', 'supportCoordinatorName', e.target.value)} /></Grid>
+            <Grid item xs={6}><TextField fullWidth label="作成者" value={planData.creator || ''} onChange={e => updatePlanData('', 'creator', e.target.value)} /></Grid>
+            <Grid item xs={6}><TextField fullWidth label="連絡先" value={planData.contact || ''} onChange={e => updatePlanData('', 'contact', e.target.value)} /></Grid>
           </Grid>
         </Box>
         {/* 概要（支援経過・課題のみ） */}
