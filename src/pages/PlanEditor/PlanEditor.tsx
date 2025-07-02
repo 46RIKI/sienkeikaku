@@ -13,6 +13,8 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  FormControlLabel,
+  Checkbox,
 } from '@mui/material';
 import {
   Save as SaveIcon,
@@ -54,7 +56,7 @@ interface PlanData {
   services: {
     serviceType: string[];
     frequencyMap: { [service: string]: string };
-    duration: string;
+    durationMap: { [service: string]: string };
     provider: string;
     startDate: string;
   };
@@ -117,8 +119,8 @@ const PlanEditor: React.FC = () => {
     },
     services: {
       serviceType: ['居宅介護'],
-      frequencyMap: { '居宅介護': '週3回' },
-      duration: '2時間/回',
+      frequencyMap: { '居宅介護': '2回' },
+      durationMap: { '居宅介護': '2時間/回' },
       provider: '○○介護サービス',
       startDate: '2024-02-01',
     },
@@ -147,6 +149,10 @@ const PlanEditor: React.FC = () => {
         // frequencyMapがなければ空オブジェクトで補完
         if (!parsed.services.frequencyMap) {
           parsed.services.frequencyMap = {};
+        }
+        // durationMapがなければ空オブジェクトで補完
+        if (!parsed.services.durationMap) {
+          parsed.services.durationMap = {};
         }
         // 新フィールドがなければ空文字で補完
         if (!('createdAt' in parsed)) parsed.createdAt = '';
@@ -224,22 +230,46 @@ const PlanEditor: React.FC = () => {
     }));
   };
 
+  // サービスごとの時間変更ハンドラ
+  const handleServiceDurationChange = (service: string, value: string) => {
+    setPlanData((prev) => ({
+      ...prev,
+      services: {
+        ...prev.services,
+        durationMap: {
+          ...prev.services.durationMap,
+          [service]: value,
+        },
+      },
+    }));
+  };
+
   // チェックボックスの変更ハンドラ
-  const handleServiceTypeChange = (service: string) => {
+  const handleServiceTypeChange = (service: string) => (_e: React.ChangeEvent<HTMLInputElement>, checked: boolean) => {
     setPlanData((prev) => {
-      const checked = prev.services.serviceType.includes(service);
-      const newServiceType = checked
-        ? prev.services.serviceType.filter((s) => s !== service)
-        : [...prev.services.serviceType, service];
-      // サービスを外した場合はfrequencyMapからも削除
+      const isChecked = prev.services.serviceType.includes(service);
+      let newServiceType;
+      if (checked && !isChecked) {
+        newServiceType = [...prev.services.serviceType, service];
+      } else if (!checked && isChecked) {
+        newServiceType = prev.services.serviceType.filter((s) => s !== service);
+      } else {
+        newServiceType = prev.services.serviceType;
+      }
+      // サービスを外した場合はfrequencyMap/durationMapからも削除
       const newFrequencyMap = { ...prev.services.frequencyMap };
-      if (checked) delete newFrequencyMap[service];
+      const newDurationMap = { ...prev.services.durationMap };
+      if (!checked) {
+        delete newFrequencyMap[service];
+        delete newDurationMap[service];
+      }
       return {
         ...prev,
         services: {
           ...prev.services,
           serviceType: newServiceType,
           frequencyMap: newFrequencyMap,
+          durationMap: newDurationMap,
         },
       };
     });
@@ -329,29 +359,40 @@ const PlanEditor: React.FC = () => {
                 <Box>
                   {serviceOptions.map((service) => (
                     <Box key={service} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <input
-                        type="checkbox"
-                        value={service}
-                        checked={planData.services.serviceType.includes(service)}
-                        onChange={() => handleServiceTypeChange(service)}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={planData.services.serviceType.includes(service)}
+                            onChange={handleServiceTypeChange(service)}
+                          />
+                        }
+                        label={service}
                       />
-                      <span style={{ marginLeft: 8, marginRight: 8 }}>{service}</span>
                       <TextField
                         size="small"
                         label="頻度"
                         value={(planData.services.frequencyMap || {})[service] || ''}
-                        onChange={e => handleServiceFrequencyChange(service, e.target.value)}
+                        onChange={(e) => handleServiceFrequencyChange(service, e.target.value)}
+                        sx={{ width: 60, ml: 1 }}
                         disabled={!planData.services.serviceType.includes(service)}
-                        sx={{ width: 100 }}
+                      />
+                      <TextField
+                        size="small"
+                        label="時間"
+                        value={(planData.services.durationMap || {})[service] || ''}
+                        onChange={(e) => handleServiceDurationChange(service, e.target.value)}
+                        sx={{ width: 90, ml: 1 }}
+                        disabled={!planData.services.serviceType.includes(service)}
                       />
                     </Box>
                   ))}
                 </Box>
               </FormControl>
             </Grid>
-            <Grid item xs={6}><TextField fullWidth label="時間・期間" value={planData.services.duration} onChange={e => updatePlanData('services', 'duration', e.target.value)} /></Grid>
-            <Grid item xs={6}><TextField fullWidth label="提供事業者" value={planData.services.provider} onChange={e => updatePlanData('services', 'provider', e.target.value)} /></Grid>
-            <Grid item xs={6}><TextField fullWidth label="利用開始予定日" type="date" value={planData.services.startDate} onChange={e => updatePlanData('services', 'startDate', e.target.value)} InputLabelProps={{ shrink: true }} /></Grid>
+            <Grid item xs={6}>
+              <TextField fullWidth label="提供事業者" value={planData.services.provider} onChange={e => updatePlanData('services', 'provider', e.target.value)} />
+              <TextField fullWidth label="利用開始予定日" type="date" value={planData.services.startDate} onChange={e => updatePlanData('services', 'startDate', e.target.value)} InputLabelProps={{ shrink: true }} sx={{ mt: 2 }} />
+            </Grid>
           </Grid>
         </Box>
         {/* 支援上の注意点・配慮事項 */}
