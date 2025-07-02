@@ -49,7 +49,7 @@ interface PlanData {
   };
   services: {
     serviceType: string[];
-    frequency: string;
+    frequencyMap: { [service: string]: string };
     duration: string;
     provider: string;
     startDate: string;
@@ -109,7 +109,7 @@ const PlanEditor: React.FC = () => {
     },
     services: {
       serviceType: ['居宅介護'],
-      frequency: '週3回',
+      frequencyMap: { '居宅介護': '週3回' },
       duration: '2時間/回',
       provider: '○○介護サービス',
       startDate: '2024-02-01',
@@ -135,7 +135,12 @@ const PlanEditor: React.FC = () => {
     if (planId && planId !== 'new') {
       const saved = localStorage.getItem(`planData_${planId}`);
       if (saved) {
-        setPlanData(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        // frequencyMapがなければ空オブジェクトで補完
+        if (!parsed.services.frequencyMap) {
+          parsed.services.frequencyMap = {};
+        }
+        setPlanData(parsed);
       }
     }
     // 新規作成時は新しいIDを発行してURL遷移
@@ -186,17 +191,39 @@ const PlanEditor: React.FC = () => {
     '就労移行支援',
   ];
 
-  // チェックボックスの変更ハンドラ
-  const handleServiceTypeChange = (service: string) => {
+  // サービスごとの頻度変更ハンドラ
+  const handleServiceFrequencyChange = (service: string, value: string) => {
     setPlanData((prev) => ({
       ...prev,
       services: {
         ...prev.services,
-        serviceType: prev.services.serviceType.includes(service)
-          ? prev.services.serviceType.filter((s) => s !== service)
-          : [...prev.services.serviceType, service],
+        frequencyMap: {
+          ...prev.services.frequencyMap,
+          [service]: value,
+        },
       },
     }));
+  };
+
+  // チェックボックスの変更ハンドラ
+  const handleServiceTypeChange = (service: string) => {
+    setPlanData((prev) => {
+      const checked = prev.services.serviceType.includes(service);
+      const newServiceType = checked
+        ? prev.services.serviceType.filter((s) => s !== service)
+        : [...prev.services.serviceType, service];
+      // サービスを外した場合はfrequencyMapからも削除
+      const newFrequencyMap = { ...prev.services.frequencyMap };
+      if (checked) delete newFrequencyMap[service];
+      return {
+        ...prev,
+        services: {
+          ...prev.services,
+          serviceType: newServiceType,
+          frequencyMap: newFrequencyMap,
+        },
+      };
+    });
   };
 
   return (
@@ -282,20 +309,27 @@ const PlanEditor: React.FC = () => {
                 <Typography sx={{ mb: 1 }}>利用サービス種別（複数選択可）</Typography>
                 <Box>
                   {serviceOptions.map((service) => (
-                    <label key={service} style={{ display: 'block', marginBottom: 4 }}>
+                    <Box key={service} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                       <input
                         type="checkbox"
                         value={service}
                         checked={planData.services.serviceType.includes(service)}
                         onChange={() => handleServiceTypeChange(service)}
                       />
-                      {service}
-                    </label>
+                      <span style={{ marginLeft: 8, marginRight: 8 }}>{service}</span>
+                      <TextField
+                        size="small"
+                        label="頻度"
+                        value={(planData.services.frequencyMap || {})[service] || ''}
+                        onChange={e => handleServiceFrequencyChange(service, e.target.value)}
+                        disabled={!planData.services.serviceType.includes(service)}
+                        sx={{ width: 100 }}
+                      />
+                    </Box>
                   ))}
                 </Box>
               </FormControl>
             </Grid>
-            <Grid item xs={6}><TextField fullWidth label="頻度" value={planData.services.frequency} onChange={e => updatePlanData('services', 'frequency', e.target.value)} /></Grid>
             <Grid item xs={6}><TextField fullWidth label="時間・期間" value={planData.services.duration} onChange={e => updatePlanData('services', 'duration', e.target.value)} /></Grid>
             <Grid item xs={6}><TextField fullWidth label="提供事業者" value={planData.services.provider} onChange={e => updatePlanData('services', 'provider', e.target.value)} /></Grid>
             <Grid item xs={6}><TextField fullWidth label="利用開始予定日" type="date" value={planData.services.startDate} onChange={e => updatePlanData('services', 'startDate', e.target.value)} InputLabelProps={{ shrink: true }} /></Grid>

@@ -46,6 +46,7 @@ interface PlanData {
     duration: string;
     provider: string;
     startDate: string;
+    frequencyMap?: Record<string, string>;
   };
   supportSystem: {
     supportCoordinator: string;
@@ -257,11 +258,14 @@ const PlanView: React.FC = () => {
           <Typography sx={{ whiteSpace: 'pre-line' }}>
             利用サービス種別: {
               Array.isArray(planData.services.serviceType)
-                ? planData.services.serviceType.join('、')
+                ? planData.services.serviceType.map(service => {
+                    // frequencyMap対応
+                    const freq = planData.services.frequencyMap ? planData.services.frequencyMap[service] : '';
+                    return freq ? `${service}${freq}` : service;
+                  }).join('、')
                 : planData.services.serviceType
             }
           </Typography>
-          <Typography sx={{ whiteSpace: 'pre-line' }}>頻度: {planData.services.frequency}</Typography>
           <Typography sx={{ whiteSpace: 'pre-line' }}>時間・期間: {planData.services.duration}</Typography>
           <Typography sx={{ whiteSpace: 'pre-line' }}>提供事業者: {planData.services.provider}</Typography>
           <Typography sx={{ whiteSpace: 'pre-line' }}>利用開始予定日: {planData.services.startDate}</Typography>
