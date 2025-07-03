@@ -3,9 +3,6 @@ import {
   Box,
   Paper,
   Typography,
-  Stepper,
-  Step,
-  StepLabel,
   Button,
   Grid,
   TextField,
@@ -20,7 +17,6 @@ import {
   Save as SaveIcon,
   Print as PrintIcon,
   Download as DownloadIcon,
-  ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 
@@ -75,15 +71,6 @@ interface PlanData {
   summary: string;
   lifeHistory: string;
 }
-
-const steps = [
-  '基本情報',
-  '現状・アセスメント',
-  '支援目標',
-  'サービス利用計画',
-  '支援体制',
-  'モニタリング計画',
-];
 
 const PlanEditor: React.FC = () => {
   const { planId } = useParams<{ planId: string }>();

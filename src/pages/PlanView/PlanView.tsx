@@ -4,18 +4,13 @@ import {
   Typography,
   Grid,
   Button,
-  Card,
-  CardContent,
-  Chip,
   Paper,
 } from '@mui/material';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Edit as EditIcon,
   Print as PrintIcon,
   Download as DownloadIcon,
-  ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
-import { useParams, useNavigate } from 'react-router-dom';
 
 interface PlanData {
   id: string;
@@ -170,29 +165,12 @@ const PlanView: React.FC = () => {
 
   if (!planData) return null;
 
-  const handleEdit = () => {
-    navigate(`/editor/${planId}`);
-  };
-
   const handlePrint = () => {
     window.print();
   };
 
   const handleDownload = () => {
     console.log('Downloading plan as PDF');
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case '承認済み':
-        return 'success';
-      case 'レビュー中':
-        return 'warning';
-      case '下書き':
-        return 'default';
-      default:
-        return 'default';
-    }
   };
 
   return (
