@@ -273,21 +273,15 @@ const PlanView: React.FC = () => {
             利用サービス種別: {
               Array.isArray(planData.services.serviceType)
                 ? planData.services.serviceType.map(service => {
-                    const freq = planData.services.frequencyMap ? planData.services.frequencyMap[service] : '';
-                    const duration = planData.services.durationMap ? planData.services.durationMap[service] : '';
-                    return [service, freq].filter(Boolean).join(' ');
+                    let freq = planData.services.frequencyMap ? planData.services.frequencyMap[service] : '';
+                    let duration = planData.services.durationMap ? planData.services.durationMap[service] : '';
+                    freq = freq ? freq.replace(/[^0-9]/g, '') : '';
+                    duration = duration ? duration.replace(/[^0-9]/g, '') : '';
+                    const freqText = freq ? `週${freq}` : '';
+                    const durationText = duration ? `${duration}時間` : '';
+                    return [service, freqText, durationText].filter(Boolean).join(' ');
                   }).join('、')
                 : planData.services.serviceType
-            }
-          </Typography>
-          <Typography sx={{ whiteSpace: 'pre-line' }}>
-            時間・期間: {
-              Array.isArray(planData.services.serviceType)
-                ? planData.services.serviceType.map(service => {
-                    const duration = planData.services.durationMap ? planData.services.durationMap[service] : '';
-                    return duration ? `${service} ${duration}` : '';
-                  }).filter(Boolean).join('、')
-                : ''
             }
           </Typography>
           <Typography sx={{ whiteSpace: 'pre-line' }}>提供事業者: {planData.services.provider}</Typography>

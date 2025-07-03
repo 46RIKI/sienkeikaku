@@ -372,17 +372,27 @@ const PlanEditor: React.FC = () => {
                         size="small"
                         label="頻度"
                         value={(planData.services.frequencyMap || {})[service] || ''}
-                        onChange={(e) => handleServiceFrequencyChange(service, e.target.value)}
+                        onChange={(e) => {
+                          let val = e.target.value.replace(/[^0-9]/g, '');
+                          if (val) val = val.replace(/^0+/, '');
+                          handleServiceFrequencyChange(service, val);
+                        }}
                         sx={{ width: 60, ml: 1 }}
                         disabled={!planData.services.serviceType.includes(service)}
+                        inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
                       />
                       <TextField
                         size="small"
                         label="時間"
                         value={(planData.services.durationMap || {})[service] || ''}
-                        onChange={(e) => handleServiceDurationChange(service, e.target.value)}
+                        onChange={(e) => {
+                          let val = e.target.value.replace(/[^0-9]/g, '');
+                          if (val) val = val.replace(/^0+/, '');
+                          handleServiceDurationChange(service, val);
+                        }}
                         sx={{ width: 90, ml: 1 }}
                         disabled={!planData.services.serviceType.includes(service)}
+                        inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
                       />
                     </Box>
                   ))}
